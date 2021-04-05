@@ -15,6 +15,11 @@ function parseArms(){
   code = input.value;
   tree = arms.parser.parse(code);
 
+  // Initialize sdf world
+  output += "&lt;?xml version=\"1.0\" ?&gt;\n"; // <?xml version = "1.0">
+  output += "&lt;sdf version=\"1.4\"&gt;\n"; // <sdf version="1.4">
+  output += "&lt;world name=\"simple_world\"&gt;\n\n"; // <world name="simple_world">
+
   // Create cursor for traversal
   let cursor = tree.cursor();
 
@@ -112,10 +117,6 @@ function parseArms(){
 
       // Close link
       output += "    &lt;/link&gt;\n" // </link>
-
-      // TODO: allow specifying pose from parameter
-
-      //TODO: allow size as parameter
     }
 
     // Closing </model> tag
@@ -128,6 +129,28 @@ function parseArms(){
 
   }
   while (cursor.nextSibling());
+
+  // Add ground plane
+  output += "&lt;model name=\"ground\"&gt;\n"; // <model name="ground">
+  output += "&lt;static&gt;true&lt;/static&gt;\n"; // <static>true</static>
+  output += "&lt;link name=\"ground_link\"&gt;\n"; // <link name="ground link">
+  output += "&lt;collision name=\"collision1\"&gt;\n"; // <collision name="collision1">
+  output += "&lt;geometry&gt;&lt;plane&gt;\n"; // <geometry><plane>
+  output += "&lt;normal&gt;0 0 1&lt;/normal&gt;\n"; // <normal>0 0 1</normal>
+  output += "&lt;/plane&gt;&lt;/geometry&gt;\n"; // </plane></geometry>
+  output += "&lt;/collision&gt;\n"; // </collision>
+  output += "&lt;visual name=\"visual1\"&gt;\n"; // <visual name="visual1">
+  output += "&lt;geometry&gt;&lt;plane&gt;\n"; // <geometry><plane>
+  output += "&lt;normal&gt;0 0 1&lt;/normal&gt;\n"; // <normal>0 0 1</normal>
+  output += "&lt;size&gt;100 100&lt;/size&gt;\n"; // <size>100 100</size>
+  output += "&lt;/plane&gt;&lt;/geometry&gt;\n"; // </plane></geometry>  
+  output += "&lt;/visual&gt;\n"; // </visual>
+  output += "&lt;/link&gt;\n"; // </link>
+  output += "&lt;/model&gt;\n" // </model>
+
+  // Close world and sdf tags
+  output += "\n&lt;/world&gt;" // </world>
+  output += "\n&lt;/sdf&gt;" // </sdf>
 
   display.innerHTML = output;
 }
