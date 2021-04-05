@@ -1,0 +1,32 @@
+@top Program { newLine* Statement (newLine+ Statement)* }
+
+Statement { ObjectName "=" ObjectVal }
+
+ObjectName{ String }
+
+ObjectVal { ObjectType | ObjectType "{" (newLine+ Parameter)* newLine* "}"}
+
+ObjectType { String }
+
+Parameter { ParName "=" ParVal }
+
+ParName { String }
+
+ParVal { String }
+
+@tokens {
+  string { (std.asciiLetter | std.digit)+ | 
+  ((std.asciiLetter | std.digit) (std.asciiLetter | std.digit | space)* (std.asciiLetter | std.digit)) }
+  space { " " }
+  newLine { "\n" }
+}
+
+@skip{
+  space
+}
+
+@skip{}{
+  String{ string }
+}
+
+@detectDelim
