@@ -1,20 +1,40 @@
 // Import parser
 const arms = require("./arms-parser.js");
 
+// Import threejs
+import * as THREE from 'three';
+
 // Declare document objects
 var input = document.getElementById("input");
 var display = document.getElementById("sdf");
 var button = document.getElementById("compile");
+var sceneContainer = document.getElementById("scene");
 button.addEventListener("click", parseArms);
-var output = "";
+
+// Initialize threejs scene
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize( window.innerWidth/2, window.innerHeight/2 );
+var domScene = sceneContainer.appendChild( renderer.domElement );
+camera.position.z = 5;
+
+// Render threejs scene
+
+function animate() {
+	requestAnimationFrame( animate );
+	renderer.render( scene, camera );
+}
+animate();
 
 // Parse input currently in textbox
 function parseArms(){
-  output = "";
+  var output = "";
   display.innerHTML = "";
-  code = input.value;
-  tree = arms.parser.parse(code);
-
+  var code = input.value;
+  var tree = arms.parser.parse(code);
+  
   // Initialize sdf world
   output += "&lt;?xml version=\"1.0\" ?&gt;\n"; // <?xml version = "1.0">
   output += "&lt;sdf version=\"1.4\"&gt;\n"; // <sdf version="1.4">
@@ -32,10 +52,10 @@ function parseArms(){
     cursor.firstChild();
     var nodeType = cursor.name;
     var nodeValue = code.slice(cursor.from, cursor.to);
+
     // Open model
     output += "&lt;model name=\"" + nodeValue + "\"&gt;\n"; // <model name="ObjectName">
     
-      
     // Get object value
     cursor.nextSibling();
 
@@ -72,20 +92,17 @@ function parseArms(){
       }
 
       // Default size
-      boxSize = "1 1 1";
-      pose = "0 0 0";
+      var boxSize = "1 1 1";
+      var pose = "0 0 0 0 0";
 
       // Loop over parameters, log and set size and pose if specified
       for(var param in parameters){
         if(param === "size"){
           boxSize = parameters[param];
-          console.log("Changed box size");
         }
         if(param === "pose"){
           pose = parameters[param];
-          console.log("Changed pose");
         }
-        console.log("Parameter:" + param + "=" + parameters[param]);
       }
 
       // Set model pose if present
@@ -117,6 +134,12 @@ function parseArms(){
 
       // Close link
       output += "    &lt;/link&gt;\n" // </link>
+
+      // Add object to threeJS scene
+      const geometry = new THREE.BoxGeometry();
+      const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+      const cube = new THREE.Mesh( geometry, material );
+      scene.add( cube );
     }
 
     // Closing </model> tag
@@ -152,7 +175,12 @@ function parseArms(){
   output += "\n&lt;/world&gt;" // </world>
   output += "\n&lt;/sdf&gt;" // </sdf>
 
+  // Output sdf
   display.innerHTML = output;
+
+  // Update threejs display
+  sceneContainer.removeChild(domScene);
+  sceneContainer.appendChild(renderer.domElement);
 }
 
 

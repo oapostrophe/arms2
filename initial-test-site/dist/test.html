@@ -1,7 +1,23 @@
+<!DOCTYPE html>
 <html>
-    <pre>
-        Hello!  How does this look?
-            Let's see if we get an indent
-        <model>And a model tag</model>
-    </pre>
+  <head>
+    <meta charset="utf-8">
+    <title>ARMS Parser</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <label for="input"><b>Enter your ARMs code below</b></label><br>
+    <div id="container">
+      <span id="inputContainer">
+        <textarea id="input" name="input" rows="20" cols="79" placeholder="Your code here..."></textarea>
+      </span>
+      <span id="scene">scene</span>
+    </div>
+
+    <button type="button" id="compile">Compile to SDF</button> <br>
+    <b>SDF Output:</b> <br>
+    <div>
+      <pre id="sdf">sdf</pre>
+    </div>
+  </body>
 </html>

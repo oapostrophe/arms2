@@ -18,7 +18,8 @@
     "@codemirror/view": "^0.18.1",
     "lezer": "^0.13.4",
     "lezer-generator": "^0.13.3",
-    "lezer-tree": "^0.13.2"
+    "lezer-tree": "^0.13.2",
+    "three": "^0.127.0"
   },
   "devDependencies": {
     "webpack": "^5.24.4",
