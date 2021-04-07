@@ -18,10 +18,9 @@ const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.inner
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth/2, window.innerHeight/2 );
 var domScene = sceneContainer.appendChild( renderer.domElement );
-camera.position.z = 5;
+camera.position.set(4, 4, 8);
 
 // Render threejs scene
-
 function animate() {
 	requestAnimationFrame( animate );
 	renderer.render( scene, camera );
@@ -71,6 +70,8 @@ function parseArms(){
 
       // Get any parameters
       var parameters = {};
+      var parameterName;
+      var parameterValue;
       while(cursor.nextSibling()){
         nodeType = cursor.name;
         if(nodeType != "Parameter"){
@@ -91,11 +92,11 @@ function parseArms(){
 
       }
 
-      // Default size
+      // Default size and pose
       var boxSize = "1 1 1";
       var pose = "0 0 0 0 0";
 
-      // Loop over parameters, log and set size and pose if specified
+      // Loop over parameters, set size and pose if specified
       for(var param in parameters){
         if(param === "size"){
           boxSize = parameters[param];
@@ -131,15 +132,27 @@ function parseArms(){
       output += "            &lt;/geometry&gt;\n"; // </geometry>
       output += "        &lt;/visual&gt;\n"; // </visual>
 
-
       // Close link
       output += "    &lt;/link&gt;\n" // </link>
 
-      // Add object to threeJS scene
+      // Add box to threeJS scene
       const geometry = new THREE.BoxGeometry();
       const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
       const cube = new THREE.Mesh( geometry, material );
       scene.add( cube );
+
+      // Set box position coordinates
+      var coords = [];
+      pose.split(" ").forEach(coord => {coords.push(parseInt(coord));});
+      cube.position.set(coords[0], coords[1], coords[2]);
+      //TODO: specify rotation from pose
+
+      // Set box size
+      var scales = [];
+      boxSize.split(" ").forEach(scale => {scales.push(parseInt(scale));});
+      cube.scale.set(scales[0], scales[1], scales[2]);
+
+
     }
 
     // Closing </model> tag
