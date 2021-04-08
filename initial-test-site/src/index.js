@@ -56,124 +56,12 @@ function parseArms(){
   // Enter program to first statement (assumes a statement exists)
   cursor.firstChild();
 
+  // Parse all statements
   do {
-
-    // Go to object name
-    cursor.firstChild();
-    var nodeType = cursor.name;
-    var nodeValue = code.slice(cursor.from, cursor.to);
-
-    // Open model
-    output += "&lt;model name=\"" + nodeValue + "\"&gt;\n"; // <model name="ObjectName">
-    
-    // Get object value
-    cursor.nextSibling();
-
-    // Get object type
-    if(!cursor.firstChild() || cursor.name != "ObjectType"){
-      console.log("Error: expected ObjectType");
+    var statementReturn = parseStatement(cursor, code);
+    if(statementReturn != -1){
+      output += statementReturn;
     }
-    nodeValue = code.slice(cursor.from, cursor.to);
-    
-
-    // Create Box
-    if(nodeValue === "Box"){
-
-      // Get any parameters
-      var parameters = {};
-      var parameterName;
-      var parameterValue;
-      while(cursor.nextSibling()){
-        nodeType = cursor.name;
-        if(nodeType != "Parameter"){
-          console.log("Error: expected Parameter");
-        }
-
-        // Get parameter name
-        cursor.firstChild();
-        parameterName = code.slice(cursor.from, cursor.to);
-
-        // Get parameter value
-        cursor.nextSibling();
-        parameterValue = code.slice(cursor.from, cursor.to);
-
-        // Add to dictionary and return to parent
-        parameters[parameterName] = parameterValue;
-        cursor.parent();
-
-      }
-
-      // Default size and pose
-      var boxSize = "1 1 1";
-      var pose = "0 0 0 0 0";
-
-      // Loop over parameters, set size and pose if specified
-      for(var param in parameters){
-        if(param === "size"){
-          boxSize = parameters[param];
-        }
-        if(param === "pose"){
-          pose = parameters[param];
-        }
-      }
-
-      // Set model pose if present
-      if(parameters["pose"]){
-        output += "    &lt;pose&gt;" + pose + "&lt;/pose&gt;\n" // <pose>
-      }
-
-      //Open link
-      output += "    &lt;link name=\"Box\"&gt;\n"; // <link name = "Box">
-
-      // Create collision
-      output += "        &lt;collision name=\"Collision\"&gt;\n"; // <collision name="collision">
-      output += "            &lt;geometry&gt;\n"; // <geometry>
-      output += "                &lt;box &gt;\n"; // <box>
-      output += "                    &lt;size&gt;" + boxSize + "&lt;/size&gt;\n"; // <size>boxSize</size>
-      output += "                &lt;/box &gt;\n"; // </box>
-      output += "            &lt;/geometry&gt;\n"; // </geometry>
-      output += "        &lt;/collision&gt;\n"; // </collision>
-      
-      // Create visual
-      output += "        &lt;visual name=\"visual\"&gt;\n"; // <visual name="visual">
-      output += "            &lt;geometry&gt;\n"; // <geometry>
-      output += "                &lt;box &gt;\n"; // <box>
-      output += "                    &lt;size&gt;" + boxSize + "&lt;/size&gt;\n"; // <size>1 1 1</size>
-      output += "                &lt;/box &gt;\n"; // </box>
-      output += "            &lt;/geometry&gt;\n"; // </geometry>
-      output += "        &lt;/visual&gt;\n"; // </visual>
-
-      // Close link
-      output += "    &lt;/link&gt;\n" // </link>
-
-      // Add box to threeJS scene
-      const geometry = new THREE.BoxGeometry();
-      const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-      const cube = new THREE.Mesh( geometry, material );
-      scene.add( cube );
-
-      // Set box position coordinates
-      var coords = [];
-      pose.split(" ").forEach(coord => {coords.push(parseInt(coord));});
-      cube.position.set(coords[0], coords[1], coords[2]);
-      //TODO: specify rotation from pose
-
-      // Set box size
-      var scales = [];
-      boxSize.split(" ").forEach(scale => {scales.push(parseInt(scale));});
-      cube.scale.set(scales[0], scales[1], scales[2]);
-
-
-    }
-
-    // Closing </model> tag
-    output += "&lt;/model&gt;\n\n";
-
-    // Navigate back up to ObjectVal
-    cursor.parent();
-    // Navigate back up to Statement
-    cursor.parent();
-
   }
   while (cursor.nextSibling());
 
@@ -202,6 +90,170 @@ function parseArms(){
   // Output sdf
   display.innerHTML = output;
 }
+
+
+function parseStatement(cursor, code){
+
+  // Get object name
+  cursor.firstChild();
+  var objectName = code.slice(cursor.from, cursor.to);
+  if(cursor.name != "ObjectName"){
+    console.log("Error parsing statement: expected ObjectName, got " + cursor.name);
+    return -1;
+  }
+  
+  // Get object value
+  cursor.nextSibling();
+  if(cursor.name != "ObjectVal"){
+    console.log("Error parsing statement: expected ObjectVal, got " + cursor.name);
+    return -1;
+  }
+
+  // Get object type
+  if(!cursor.firstChild() || cursor.name != "ObjectType"){
+    console.log("Errorparsing statement: expected ObjectType, got " + cursor.name);
+    return -1;
+  }
+  var objectType = code.slice(cursor.from, cursor.to).toLowerCase();
+  
+  // Get any parameters
+  var parameters = {};
+  var parameterName;
+  var parameterValue;
+  while(cursor.nextSibling()){
+    if(cursor.name != "Parameter"){
+      console.log("parsing statement: expected Parameter, got " + cursor.name);
+      return -1;
+    }
+
+    // Get parameter name
+    cursor.firstChild();
+    parameterName = code.slice(cursor.from, cursor.to).toLowerCase();
+
+    // Get parameter value
+    cursor.nextSibling();
+    parameterValue = code.slice(cursor.from, cursor.to);
+
+    // Add to dictionary and return to parent
+    parameters[parameterName] = parameterValue;
+    cursor.parent();
+  }
+
+  // Navigate back up to ObjectVal
+  cursor.parent();
+  // Navigate back up to Statement
+  cursor.parent();
+
+  // add Object
+  return addObject(objectName, objectType, parameters);
+}
+
+
+function addObject(objectName, objectType, parameters={}){
+
+  // Initialize variables
+  var output = "";
+  const definedTypes = new Set(["box", "sphere"]);
+  var boxSize = (parameters["size"]) ? parameters["size"] : "1 1 1";
+  var radius = (parameters["radius"]) ? parameters["radius"] : "1";
+  var pose = (parameters["pose"]) ? parameters["pose"] : null;
+
+  // Open model
+  output += "&lt;model name=\"" + objectName + "\"&gt;\n"; // <model name="ObjectName">
+
+  // Set pose if specified
+  if(pose){
+    output += "    &lt;pose&gt;" + pose + "&lt;/pose&gt;\n"; // <pose>
+  }
+
+  //Open link
+  output += "    &lt;link name=\""+objectType+"\"&gt;\n"; // <link name = "box">
+
+  // Only create geometries for defined types
+  if(definedTypes.has(objectType)){
+    
+    // Open collision
+    output += "        &lt;collision name=\"collision\"&gt;\n"; // <collision name="collision">
+    output += "            &lt;geometry&gt;\n"; // <geometry>
+    output += "                &lt;"+objectType+"&gt;\n"; // <box>
+
+    // Set geometry-specific attributes
+    if(objectType === "box"){
+      output += "                    &lt;size&gt;" + boxSize + "&lt;/size&gt;\n"; // <size>1 1 1</size>
+    }
+    else if(objectType === "sphere"){
+      output += "                    &lt;radius&gt;" + radius + "&lt;/radius&gt;\n"; // <radius>1</radius>
+    }
+
+    // Close collision
+    output += "                &lt;/+"+objectType+"&gt;\n"; // </box>
+    output += "            &lt;/geometry&gt;\n"; // </geometry>
+    output += "        &lt;/collision&gt;\n"; // </collision>
+    
+    // Open visual
+    output += "        &lt;visual name=\"visual\"&gt;\n"; // <visual name="visual">
+    output += "            &lt;geometry&gt;\n"; // <geometry>
+    output += "                &lt;"+objectType+"&gt;\n"; // <box>
+
+    // Set geometry-specific attributes
+    if(objectType === "Box"){
+      output += "                    &lt;size&gt;" + boxSize + "&lt;/size&gt;\n"; // <size>1 1 1</size>
+    }
+    else if(objectType === "sphere"){
+      output += "                    &lt;radius&gt;" + radius + "&lt;/radius&gt;\n"; // <radius>1</radius>
+    }
+
+    // Close visual
+    output += "                &lt;/"+objectType+"&gt;\n"; // </box>
+    output += "            &lt;/geometry&gt;\n"; // </geometry>
+    output += "        &lt;/visual&gt;\n"; // </visual>
+  }
+
+  // Close link
+  output += "    &lt;/link&gt;\n" // </link>
+
+  // Closing </model> tag
+  output += "&lt;/model&gt;\n\n";
+
+  // Don't render objects of undefined types
+  if(!definedTypes.has(objectType)){
+    return output;
+  }
+
+  // Define object threeJS geometry
+  var geometry;
+  if(objectType === "box"){
+    geometry = new THREE.BoxGeometry();
+  }
+  else if(objectType === "sphere"){
+    geometry = new THREE.SphereGeometry(parseInt(radius));
+  }
+
+  // Add object to threeJs scene
+  const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+  const tjsObject = new THREE.Mesh( geometry, material );
+  scene.add(tjsObject);
+
+  // Set coordinates if specified
+  var coords = [];
+  if(pose){
+    pose.split(" ").forEach(coord => {coords.push(parseInt(coord));});
+    tjsObject.position.set(coords[0], coords[1], coords[2]);
+    //TODO: specify rotation from pose
+  }
+
+  // Set box size if specified
+  if(objectType === "box"){
+    var scales = [];
+    boxSize.split(" ").forEach(scale => {scales.push(parseInt(scale));});
+    tjsObject.scale.set(scales[0], scales[1], scales[2]);
+  }
+
+  return output;
+}
+
+
+
 
 
 /*
