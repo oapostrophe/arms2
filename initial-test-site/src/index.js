@@ -29,8 +29,19 @@ animate();
 
 // Parse input currently in textbox
 function parseArms(){
+
+  // Reset sdf
   var output = "";
   display.innerHTML = "";
+
+  // Reset threejs scene
+  scene.children.forEach(object => {
+    object.material.dispose();
+    object.geometry.dispose();
+  });
+  scene.clear();
+
+  // Get new input
   var code = input.value;
   var tree = arms.parser.parse(code);
   
@@ -190,10 +201,6 @@ function parseArms(){
 
   // Output sdf
   display.innerHTML = output;
-
-  // Update threejs display
-  sceneContainer.removeChild(domScene);
-  sceneContainer.appendChild(renderer.domElement);
 }
 
 
