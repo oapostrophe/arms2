@@ -27,7 +27,10 @@ function animate() {
 }
 animate();
 
-// Parse input currently in textbox
+
+/**
+ * Parse input currently in textbox
+ */
 function parseArms(){
 
   // Reset sdf
@@ -44,17 +47,22 @@ function parseArms(){
   // Get new input
   var code = input.value;
   var tree = arms.parser.parse(code);
-  
+
   // Initialize sdf world
   output += "&lt;?xml version=\"1.0\" ?&gt;\n"; // <?xml version = "1.0">
   output += "&lt;sdf version=\"1.4\"&gt;\n"; // <sdf version="1.4">
   output += "&lt;world name=\"simple_world\"&gt;\n\n"; // <world name="simple_world">
 
-  // Create cursor for traversal
+  // Create cursor and enter program to first statement (assumes a statement exists)
   let cursor = tree.cursor();
-
-  // Enter program to first statement (assumes a statement exists)
   cursor.firstChild();
+
+  /*
+  while(cursor.next()){
+    console.log(cursor.name);
+    console.log(code.slice(cursor.from, cursor.to));
+  }
+  */
 
   // Parse all statements
   do {
@@ -92,63 +100,171 @@ function parseArms(){
 }
 
 
+/**
+ * Parses a single Statement
+ * 
+ * @param cursor Lezer parse tree cursor pointing to statement
+ * @param code String with full text of code being parsed
+ * @return String with sdf representing statement contents
+ */
 function parseStatement(cursor, code){
+  var output = "";
+  
+  // Get model name
+  if(!cursor.firstChild() | cursor.name != "ModelName"){
+    console.log("Error parsing statement: expected Modelname, got " + cursor.name);
+    return -1;
+  }
+  var modelName = code.slice(cursor.from, cursor.to);
 
-  // Get object name
+  // Open model tag
+  output += "&lt;model name=\"" + modelName + "\"&gt;\n"; // <model name="modelName">
+
+  // Get Template
+  if(!cursor.nextSibling() | cursor.name != "Type"){
+    console.log("Error parsing statement: expected model Type, got " + cursor.name);
+    return -1;
+  }
   cursor.firstChild();
-  var objectName = code.slice(cursor.from, cursor.to);
-  if(cursor.name != "ObjectName"){
-    console.log("Error parsing statement: expected ObjectName, got " + cursor.name);
-    return -1;
-  }
-  
-  // Get object value
-  cursor.nextSibling();
-  if(cursor.name != "ObjectVal"){
-    console.log("Error parsing statement: expected ObjectVal, got " + cursor.name);
-    return -1;
-  }
+  var template = code.slice(cursor.from, cursor.to);
 
-  // Get object type
-  if(!cursor.firstChild() || cursor.name != "ObjectType"){
-    console.log("Errorparsing statement: expected ObjectType, got " + cursor.name);
-    return -1;
-  }
-  var objectType = code.slice(cursor.from, cursor.to).toLowerCase();
+  // TODO: future use--specify other templates, put default in else case
+
+  // Default to model
   
-  // Get any parameters
-  var parameters = {};
-  var parameterName;
-  var parameterValue;
+  // Get any SubStatements
   while(cursor.nextSibling()){
-    if(cursor.name != "Parameter"){
-      console.log("parsing statement: expected Parameter, got " + cursor.name);
-      return -1;
+    var subStatementOutput = parseSubStatement(cursor, code);
+    if(subStatementOutput != -1){
+      output += subStatementOutput;
     }
+  }
 
+  // Return to top-level statement
+  cursor.parent();
+
+  // Closing </model> tag
+  output += "&lt;/model&gt;\n\n";
+
+  return output;
+}
+
+
+/**
+ * Parses a single SubStatement
+ * 
+ * @param cursor cursor object from Lezer parse tree currently pointing at SubStatement to be parsed
+ * @param code  full text of code being parsed
+ * @return string with sdf output representing subStatement contents
+ */
+function parseSubStatement(cursor, code){
+  cursor.firstChild();
+
+  // Case when SubStatement is a model-wide parameter
+  if(cursor.name === "Parameter"){
     // Get parameter name
     cursor.firstChild();
-    parameterName = code.slice(cursor.from, cursor.to).toLowerCase();
+    var parameterName = code.slice(cursor.from, cursor.to).toLowerCase();
 
     // Get parameter value
     cursor.nextSibling();
     parameterValue = code.slice(cursor.from, cursor.to);
 
-    // Add to dictionary and return to parent
-    parameters[parameterName] = parameterValue;
+    // Return cursor to parameter
     cursor.parent();
+    // Return cursor to SubStatement
+    cursor.parent();
+
+    return addParameter(parameterName, parameterValue);
   }
 
-  // Navigate back up to ObjectVal
-  cursor.parent();
-  // Navigate back up to Statement
-  cursor.parent();
+  // Case when SubStatement defines a child object
+  else{
 
-  // add Object
-  return addObject(objectName, objectType, parameters);
+    // Get object name
+    var objectName = code.slice(cursor.from, cursor.to);
+    if(cursor.name != "ObjectName"){
+      console.log("Error parsing statement: expected ObjectName, got " + cursor.name);
+      return -1;
+    }
+    
+    // Get object value
+    cursor.nextSibling();
+    if(cursor.name != "ObjectVal"){
+      console.log("Error parsing statement: expected ObjectVal, got " + cursor.name);
+      return -1;
+    }
+
+    // Get object Template
+    if(!cursor.firstChild() || cursor.name != "Template"){
+      console.log("Error parsing statement: expected Template, got " + cursor.name);
+      return -1;
+    }
+    var objectType = code.slice(cursor.from, cursor.to).toLowerCase();
+    
+    // Get any parameters
+    var parameters = {};
+    var parameterName;
+    var parameterValue;
+    while(cursor.nextSibling()){
+      if(cursor.name != "Parameter"){
+        console.log("parsing statement: expected Parameter, got " + cursor.name);
+        return -1;
+      }
+
+      // Get parameter name
+      cursor.firstChild();
+      parameterName = code.slice(cursor.from, cursor.to).toLowerCase();
+
+      // Get parameter value
+      cursor.nextSibling();
+      parameterValue = code.slice(cursor.from, cursor.to);
+
+      // Add to dictionary and return to parent
+      parameters[parameterName] = parameterValue;
+      cursor.parent();
+    }
+
+    // Navigate back up to ObjectVal
+    cursor.parent();
+    // Navigate back up to SubStatement
+    cursor.parent();
+
+    // add Object
+    return addObject(objectName, objectType, parameters);
+
+  }
 }
 
 
+/**
+ * Generate SDF for a model-wide parameter
+ * 
+ * @param parameterName Name of parameter (string)
+ * @param parameterValue Value of parameter (string)
+ * @return String for parameter in SDF
+ */
+function addParameter(parameterName, parameterValue){
+
+  // Model-wide pose
+  if(parameterName.toLowerCase() == "pose"){
+    return "    &lt;pose&gt;" + parameterValue + "&lt;/pose&gt;\n";
+  }
+
+  // Undefined parameter
+  else{
+    console.log("Skipping undefined parameter " + parameterName);
+    return "";
+  }
+}
+
+
+/**
+ * Generates SDF for a single object within a model (link, joint, etc)
+ * @param {*} objectName 
+ * @param {*} objectType 
+ * @param {*} parameters 
+ */
 function addObject(objectName, objectType, parameters={}){
 
   // Initialize variables
@@ -158,16 +274,13 @@ function addObject(objectName, objectType, parameters={}){
   var radius = (parameters["radius"]) ? parameters["radius"] : "1";
   var pose = (parameters["pose"]) ? parameters["pose"] : null;
 
-  // Open model
-  output += "&lt;model name=\"" + objectName + "\"&gt;\n"; // <model name="ObjectName">
+  //Open link
+  output += "    &lt;link name=\""+objectName+"\"&gt;\n"; // <link name = "box">
 
   // Set pose if specified
   if(pose){
     output += "    &lt;pose&gt;" + pose + "&lt;/pose&gt;\n"; // <pose>
   }
-
-  //Open link
-  output += "    &lt;link name=\""+objectType+"\"&gt;\n"; // <link name = "box">
 
   // Only create geometries for defined types
   if(definedTypes.has(objectType)){
@@ -186,7 +299,7 @@ function addObject(objectName, objectType, parameters={}){
     }
 
     // Close collision
-    output += "                &lt;/+"+objectType+"&gt;\n"; // </box>
+    output += "                &lt;/"+objectType+"&gt;\n"; // </box>
     output += "            &lt;/geometry&gt;\n"; // </geometry>
     output += "        &lt;/collision&gt;\n"; // </collision>
     
@@ -196,7 +309,7 @@ function addObject(objectName, objectType, parameters={}){
     output += "                &lt;"+objectType+"&gt;\n"; // <box>
 
     // Set geometry-specific attributes
-    if(objectType === "Box"){
+    if(objectType === "box"){
       output += "                    &lt;size&gt;" + boxSize + "&lt;/size&gt;\n"; // <size>1 1 1</size>
     }
     else if(objectType === "sphere"){
@@ -211,9 +324,6 @@ function addObject(objectName, objectType, parameters={}){
 
   // Close link
   output += "    &lt;/link&gt;\n" // </link>
-
-  // Closing </model> tag
-  output += "&lt;/model&gt;\n\n";
 
   // Don't render objects of undefined types
   if(!definedTypes.has(objectType)){

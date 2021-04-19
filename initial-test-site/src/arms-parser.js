@@ -2,14 +2,14 @@
 import {Parser} from "lezer"
 export const parser = Parser.deserialize({
   version: 13,
-  states: "%QOVQPOOOOQO'#Cf'#CfOVQPOOOOQO'#C`'#C`OOQO'#C_'#C_O_QPO'#C^QdQPOOOOQO-E6d-E6dOYQPO,58xOVQPO'#ChQdQPOOOOQO'#Cb'#CbOiQPO'#CaOOQO1G.d1G.dOOQO,59S,59SOOQO-E6f-E6fOtQPO,58{O|QPO1G.gO!XQPO1G.gOOQO1G.g1G.gOOQO'#Cd'#CdO!aQPO'#CcOOQO,59R,59ROOQO7+$R7+$RO!fQPO7+$ROOQO-E6e-E6eOYQPO,58}OOQO<<Gm<<GmPVQPO'#CfOOQO'#Ce'#CeOOQO1G.i1G.i",
-  stateData: "!q~O_OS~O`POaRO~ObWO~O`PO~Oc`O]TX`TX~O`POdcO~O`POaROdgO~O`POdgO~ObjO~O`POaROdkO~O",
-  goto: "#P]PP^ejz}!Q!V![!_!s!ySUOQR^XVTOQXUSOQXQZWUdahlRmjR]WR[WVfahlVeahlRnjQQOYVQXahlSXUYQa`RhbQb`RibQYUR_Y",
-  nodeNames: "⚠ Program Statement ObjectName String ObjectVal ObjectType Parameter ParName ParVal",
-  maxTerm: 20,
+  states: "'[OVQPOOOOQO'#Ci'#CiOVQPOOOOQO'#C`'#C`OOQO'#C_'#C_O_QPO'#C^QdQPOOOOQO-E6g-E6gOYQPO,58xOVQPO'#ClQdQPOOOOQO'#Cb'#CbOiQPO'#CaOOQO1G.d1G.dOOQO,59W,59WOOQO-E6j-E6jOtQPO,58{O|QPO1G.gO![QPO1G.gOOQO1G.g1G.gOOQO'#Ce'#CeO!dQPO'#CdOOQO'#Cc'#CcOYQPO'#CcOOQO,59U,59UOOQO7+$R7+$RO!iQPO7+$ROOQO-E6h-E6hOYQPO,59OOOQO'#Cg'#CgO!wQPO,58}OOQO<<Gm<<GmP!|QPO'#CiOOQO'#Cf'#CfOOQO1G.j1G.jOYQPO1G.iO#XQPO'#ChOOQO7+$T7+$TO#dQPO,59SO#lQPO1G.nO#wQPO1G.nOOQO1G.n1G.nOOQO,59V,59VOOQO7+$Y7+$YO$PQPO7+$YOOQO-E6i-E6iOOQO<<Gt<<GtPVQPO'#Ci",
+  stateData: "$[~OcOS~OdPOeRO~OfWO~OdPO~Og`OaTXdTX~OdPOicO~OdPOeROhgOiiO~OdPOiiO~OflO~OdPOeROhgOioO~OfsO~OdPOeROhgO~OgvOd[Xi[X~OdPOiyO~OdPOeROi{O~OdPOi{O~OdPOeROi!OO~O",
+  goto: "$RaPPbin!V!Y!`!e!o!w!z!}#Q#o#u#{SUOQR^XVTOQXUSOQXSZWs[dajpw|!PQmgRqlR]WQ[WRtsVhajpUfajpVzw|!P]eajpw|!PRrlRngRusQQO`VQXajpw|!PSXUYQa`QjbQwvR|xQb`RkbQxvR}xQYUR_Y",
+  nodeNames: "⚠ Program Statement ModelName String Type Template SubStatement Parameter ParName ParVal ObjectName ObjectVal",
+  maxTerm: 25,
   skippedNodes: [0],
-  repeatNodeCount: 3,
-  tokenData: "#X~RWYZkpqp!Q![u!_!`!x!c!}u#T#ou#o#p!}#q#r#S~pO`~~uO_~~zSa~pq!W!Q![u!c!}u#T#ou~!ZSpq!W!Q![!g!c!}!g#T#o!g~!lSa~pq!W!Q![!g!c!}!g#T#o!g~!}Ob~~#SOc~~#XOd~",
+  repeatNodeCount: 4,
+  tokenData: "#a~RXYZnpqsstx!Q![}!_!`#Q!c!}}#T#o}#o#p#V#q#r#[~sOd~~xOc~~}Oh~~!SSe~pq!`!Q![}!c!}}#T#o}~!cSpq!`!Q![!o!c!}!o#T#o!o~!tSe~pq!`!Q![!o!c!}!o#T#o!o~#VOf~~#[Og~~#aOi~",
   tokenizers: [0],
   topRules: {"Program":[0,1]},
   tokenPrec: 0

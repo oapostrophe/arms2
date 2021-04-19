@@ -2,10 +2,13 @@
 export const
   Program = 1,
   Statement = 2,
-  ObjectName = 3,
+  ModelName = 3,
   String = 4,
-  ObjectVal = 5,
-  ObjectType = 6,
-  Parameter = 7,
-  ParName = 8,
-  ParVal = 9
+  Type = 5,
+  Template = 6,
+  SubStatement = 7,
+  Parameter = 8,
+  ParName = 9,
+  ParVal = 10,
+  ObjectName = 11,
+  ObjectVal = 12

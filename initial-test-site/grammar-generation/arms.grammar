@@ -1,12 +1,18 @@
 @top Program { newLine* Statement (newLine+ Statement)* }
 
-Statement { ObjectName "=" ObjectVal }
+Statement { ModelName "=" Type }
+
+ModelName{ String }
+
+Type{ Template | Template "{" (newLine+ SubStatement)* newLine* "}" }
+
+Template{ String }
+
+SubStatement{ Parameter | "#" ObjectName "=" ObjectVal }
 
 ObjectName{ String }
 
-ObjectVal { ObjectType | ObjectType "{" (newLine+ Parameter)* newLine* "}"}
-
-ObjectType { String }
+ObjectVal { Template | Template "{" (newLine+ Parameter)* newLine* "}"}
 
 Parameter { ParName "=" ParVal }
 
