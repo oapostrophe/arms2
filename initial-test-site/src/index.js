@@ -260,16 +260,75 @@ function addParameter(parameterName, parameterValue){
 
 
 /**
- * Generates SDF for a single object within a model (link, joint, etc)
+ * Determine type for a single bject within model (joint, link, etc) and call appropriate function to generate sdf
+ * 
  * @param {*} objectName 
  * @param {*} objectType 
  * @param {*} parameters 
  */
 function addObject(objectName, objectType, parameters={}){
 
+  const jointTypes = new Set(["fixed"]);
+  if(jointTypes.has(objectType)){
+    return addJoint(objectName, objectType, parameters);
+  }
+  else{
+    return addLink(objectName, objectType, parameters);
+  }
+
+}
+
+/**
+ * Generates SDF for a single joint 
+ * 
+ * @param {*} objectName 
+ * @param {*} objectType 
+ * @param {*} parameters 
+ */
+function addJoint(objectName, objectType, parameters={}){
+
+  // Initialize variables
+  var pose = (parameters["pose"]) ? parameters["pose"] : null;
+  var output = "";
+
+  // Check for necessary parameters (parent and child)
+  if(!parameters["parent"] || !parameters["child"]){
+    console.log("Error adding joint: parent or child not specified!");
+    return -1;
+  }
+
+  // Open joint
+  output += "    &lt;joint name=\""+objectName+"\" type=\""+objectType+"\"&gt;\n"; // <joint name = "name" type="fixed">
+
+  // Set pose if specified
+  if(pose){
+    output += "        &lt;pose&gt;" + pose + "&lt;/pose&gt;\n"; // <pose>
+  }
+
+  // Add parent
+  output += "        &lt;parent&gt;"+parameters["parent"]+"&lt;/parent&gt;\n"; // <parent>name</parent>
+
+  // Add child
+  output += "        &lt;child&gt;"+parameters["child"]+"&lt;/child&gt;\n"; // <child>name</child>
+
+  // Close joint
+  output += "    &lt;/joint&gt;\n" // </joint>
+
+  return output;
+}
+
+
+/**
+ * Generates SDF for a single object within a model (link, joint, etc)
+ * @param {*} objectName 
+ * @param {*} objectType 
+ * @param {*} parameters 
+ */
+function addLink(objectName, objectType, parameters={}){
+
   // Initialize variables
   var output = "";
-  const definedTypes = new Set(["box", "sphere"]);
+  const linkTypes = new Set(["box", "sphere"]);
   var boxSize = (parameters["size"]) ? parameters["size"] : "1 1 1";
   var radius = (parameters["radius"]) ? parameters["radius"] : "1";
   var pose = (parameters["pose"]) ? parameters["pose"] : null;
@@ -282,8 +341,8 @@ function addObject(objectName, objectType, parameters={}){
     output += "    &lt;pose&gt;" + pose + "&lt;/pose&gt;\n"; // <pose>
   }
 
-  // Only create geometries for defined types
-  if(definedTypes.has(objectType)){
+  // Create geometries for defined link types
+  if(linkTypes.has(objectType)){
     
     // Open collision
     output += "        &lt;collision name=\"collision\"&gt;\n"; // <collision name="collision">
@@ -325,8 +384,8 @@ function addObject(objectName, objectType, parameters={}){
   // Close link
   output += "    &lt;/link&gt;\n" // </link>
 
-  // Don't render objects of undefined types
-  if(!definedTypes.has(objectType)){
+  // Don't render undefined link types
+  if(!linkTypes.has(objectType)){
     return output;
   }
 
