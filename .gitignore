@@ -1,0 +1,5 @@
+node_modules/
+demo/
+node_test/
+package.json
+package-lock.json

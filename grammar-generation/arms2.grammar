@@ -1,0 +1,56 @@
+@top Program { newLine* Statement (newLine+ Statement)* }
+
+Statement { ModelName "=" ModelValue }
+
+ModelValue{ ModelType ModelBody }
+
+ModelType{ ModelPrim | Template }
+
+ModelPrim{ "Model" }
+
+Template{ TemplateName Arguments }
+
+TemplateName{ String }
+
+Arguments{ "()" | "(" (Argument",")* Argument ")" }
+
+Argument{ String }
+
+ModelName{ String }
+
+ModelBody{ "" | "{" (newLine*) SubStatement (newLine+ SubStatement)* (newLine)* "}" }
+
+SubStatement{ VariableName "=" (Expression | Primitive) }
+
+Primitive{ Primtype Properties }
+
+Primtype{ "Cube" | "Sphere" | "Fixed" | "Link" }
+
+Properties{ "" | "{" (newLine)* Property (newLine+ Property)* (newLine)* "}" }
+
+Property{ VariableName "=" Expression }
+
+Expression{ VariableName | Numbers }
+
+VariableName{ String }
+
+Numbers{ (number)+ }
+
+@tokens {
+    number{ (std.digit+) | (std.digit+) "." (std.digit+) }
+  string { (std.asciiLetter | std.digit)+ | 
+  ((std.asciiLetter | std.digit) (std.asciiLetter | std.digit | space)* (std.asciiLetter | std.digit)) }
+  space { " " }
+
+  newLine { "\n" }
+}
+
+@skip{
+  space
+}
+
+@skip{}{
+  String{ string }
+}
+
+@detectDelim
