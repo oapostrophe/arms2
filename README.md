@@ -38,7 +38,7 @@ Over the Spring 2021 semester, I began creating ARMs as an in-browser javascript
 
 ## Current State of the App:
 
-The source code for the app can be found [here](https://github.com/swow2015/arms2).  The app can be quickly demoed by downloading "dist/main.js" and "dist/app.html".  With these two in the same directory, you can simply open the HTML file and the app will run.
+The source code for the app can be found [here](https://github.com/swow2015/arms2).  The app can be quickly demoed by downloading ["dist/main.js"](https://github.com/oapostrophe/arms2/blob/main/dist/main.js), ["dist/app.html"](https://github.com/oapostrophe/arms2/edit/main/dist/app.html), and ["dist/style.css"](https://github.com/oapostrophe/arms2/blob/main/dist/style.css).  With these three in the same directory, you can simply open the HTML file and the app will run.
 
 ![Current state of the ARMs app](images/demo4.png)  
 *Current state of the ARMs app*
